@@ -42,6 +42,41 @@ LuaBazhen = sgs.CreateTriggerSkill{
 	状态：
 ]]
 
+LuaBaoling = sgs.CreateTriggerSkill{
+	name = "LuaBaoling",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.EventPhaseEnd},
+	relate_to_place = "head",
+	can_preshow = false,
+	can_trigger = function(self, event, room, player, data)
+		if player and player:isAlive() and player:hasSkill(self:objectName()) and player:getPhase() == sgs.Player_Play and player:hasShownSkill(self) then
+			return string.find(player:getActualGeneral2Name(), "sujiang") and "" or self:objectName(), player:objectName()
+		end
+		return ""
+	end,
+	on_cost = function(self, event, room, player, data)
+		room:broadcastSkillInvoke(self:objectName(), player)
+		room:doSuperLightbox("dongzhuo", self:objectName())
+		room:notifySkillInvoked(player, self:objectName())
+		return true
+	end,
+	on_effect = function(self, event, room, player, data)
+		player:removeGeneral(false)
+		room:setPlayerProperty(player, "maxhp", sgs.QVariant(player:getMaxHp() + 3))
+		local log = sgs.LogMessage()
+		log.type = "#GainMaxHp"
+		log.from = player
+		log.arg = tostring(3)
+		room:sendLog(log)
+		local recover = sgs.RecoverStruct()
+		recover.recover = 3
+		recover.who = player
+		room:recover(player, recover)
+		room:handleAcquireDetachSkills(player, "benghuai")
+		return false
+	end,
+}
+
 --[[
 	悲歌
 	相关武将：标-蔡文姬
@@ -122,6 +157,7 @@ LuaBeige = sgs.CreateTriggerSkill{
 		end
 	end,
 }
+
 --[[
 	笔伐
 	相关武将：身份-陈琳
